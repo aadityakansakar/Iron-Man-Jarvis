@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS // Holographic Interface System v4.2.1</title>
+    <meta name="description" content="Futuristic AI holographic interface controlled by hand gestures via webcam">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+    <canvas id="loading-canvas"></canvas>
+    <div class="loading-content">
+        <div class="logo-rings-wrapper">
+            <div class="logo-ring r1"></div>
+            <div class="logo-ring r2"></div>
+            <div class="logo-ring r3"></div>
+        </div>
+        <h1 class="jarvis-logo">JARVIS</h1>
+        <p class="logo-subtitle">HOLOGRAPHIC INTERFACE SYSTEM &nbsp;|&nbsp; v4.2.1</p>
+        <div class="loading-bar-outer">
+            <div class="loading-bar-inner" id="loading-bar"></div>
+        </div>
+        <div class="loading-status" id="loading-status">INITIALIZING CORE SYSTEMS...</div>
+        <button class="start-btn" id="start-btn">⬡ &nbsp; INITIALIZE INTERFACE</button>
+        <p class="camera-note">Camera access required &nbsp;·&nbsp; Desktop recommended</p>
+        <p class="serve-note">⚠ Must be served via HTTP for camera access.<br>Run: <code>python -m http.server 8080</code> then open <code>http://localhost:8080</code></p>
+    </div>
+</div>
+
+<!-- MAIN APPLICATION -->
+<div id="app" class="hidden">
+    <video id="webcam" autoplay playsinline muted></video>
+    <canvas id="three-canvas"></canvas>
+    <canvas id="overlay-canvas"></canvas>
+
+    <div id="ui-overlay">
+        <div class="scan-overlay"></div>
+        <div class="vignette"></div>
+
+        <!-- TOP BAR -->
+        <div id="top-bar">
+            <div class="tb-left"><span class="brand">J.A.R.V.I.S</span><span class="brand-sub">HOLOGRAPHIC OS v4.2.1</span></div>
+            <div class="tb-center"><div class="tb-item" id="time-display">00:00:00</div><div class="tb-sep">|</div><div class="tb-item" id="date-display">--/--/----</div></div>
+            <div class="tb-right"><div class="tb-status" id="sys-online">● SYSTEMS ONLINE</div></div>
+        </div>
+
+        <!-- CORNER HUDs -->
+        <div class="corner-hud tl">
+            <div class="hud-line"></div>
+            <div class="hud-row"><span class="hud-lbl">CPU</span><div class="mini-bar"><div id="cpu-bar" style="width:72%"></div></div><span class="hud-val" id="cpu-val">72%</span></div>
+            <div class="hud-row"><span class="hud-lbl">MEM</span><div class="mini-bar"><div id="mem-bar" style="width:55%"></div></div><span class="hud-val" id="mem-val">55%</span></div>
+            <div class="hud-row"><span class="hud-lbl">GPU</span><div class="mini-bar"><div id="gpu-bar" style="width:88%"></div></div><span class="hud-val" id="gpu-val">88%</span></div>
+            <div class="hud-row"><span class="hud-lbl">NET</span><div class="mini-bar"><div id="net-bar" style="width:34%"></div></div><span class="hud-val" id="net-val">34%</span></div>
+        </div>
+
+        <div class="corner-hud tr">
+            <div class="hud-line"></div>
+            <div class="hud-row"><span class="hud-lbl">GESTURE</span><span class="hud-val accent" id="gesture-display">NONE</span></div>
+            <div class="hud-row"><span class="hud-lbl">TRACKING</span><span class="hud-val" id="tracking-status">SCANNING</span></div>
+            <div class="hud-row"><span class="hud-lbl">CONFIDENCE</span><span class="hud-val" id="confidence-display">--%</span></div>
+            <div class="hud-row"><span class="hud-lbl">LANDMARKS</span><span class="hud-val" id="landmark-count">0/21</span></div>
+        </div>
+
+        <div class="corner-hud bl">
+            <div class="hud-row"><span class="hud-lbl">FPS</span><span class="hud-val" id="fps-display">--</span></div>
+            <div class="hud-row"><span class="hud-lbl">CURSOR X</span><span class="hud-val" id="cursor-x">---</span></div>
+            <div class="hud-row"><span class="hud-lbl">CURSOR Y</span><span class="hud-val" id="cursor-y">---</span></div>
+            <div class="hud-row"><span class="hud-lbl">STATUS</span><span class="hud-val accent" id="sys-status">ONLINE</span></div>
+            <div class="hud-line"></div>
+        </div>
+
+        <div class="corner-hud br">
+            <div class="hud-row"><span class="hud-lbl">UPLINK</span><span class="hud-val">↑ 847 Mb/s</span></div>
+            <div class="hud-row"><span class="hud-lbl">DOWNLINK</span><span class="hud-val">↓ 2.4 Gb/s</span></div>
+            <div class="hud-row"><span class="hud-lbl">LATENCY</span><span class="hud-val">12 ms</span></div>
+            <div class="hud-row"><span class="hud-lbl">NODES</span><span class="hud-val">47 ACTIVE</span></div>
+            <div class="hud-line"></div>
+        </div>
+
+        <!-- PANEL NAV -->
+        <div id="nav-ring">
+            <div class="nav-dot active" data-panel="system">SYS</div>
+            <div class="nav-dot" data-panel="camera">CAM</div>
+            <div class="nav-dot" data-panel="analytics">ANA</div>
+            <div class="nav-dot" data-panel="map">MAP</div>
+            <div class="nav-dot" data-panel="files">FIL</div>
+            <div class="nav-dot" data-panel="network">NET</div>
+            <div class="nav-dot" data-panel="control">CTL</div>
+        </div>
+
+        <!-- HOLOGRAPHIC PANELS -->
+        <div id="panels-container">
+
+            <!-- SYSTEM -->
+            <div class="holo-panel visible" id="panel-system" data-panel="system">
+                <div class="panel-scanline"></div>
+                <div class="panel-corner tl"></div><div class="panel-corner br"></div>
+                <div class="panel-header"><span class="ph-icon">⬡</span><span class="ph-title">SYSTEM STATUS</span><div class="ph-right"><span class="ph-dot g"></span><span class="ph-close">✕</span></div></div>
+                <div class="panel-content">
+                    <div class="sys-stat"><span class="sl">CPU CORE A</span><div class="sb"><div class="sf" id="pf-cpuA" style="width:72%"></div></div><span class="sv" id="pv-cpuA">72%</span></div>
+                    <div class="sys-stat"><span class="sl">CPU CORE B</span><div class="sb"><div class="sf" id="pf-cpuB" style="width:45%"></div></div><span class="sv" id="pv-cpuB">45%</span></div>
+                    <div class="sys-stat"><span class="sl">MEMORY</span><div class="sb"><div class="sf" id="pf-mem" style="width:63%"></div></div><span class="sv" id="pv-mem">63%</span></div>
+                    <div class="sys-stat"><span class="sl">GPU LOAD</span><div class="sb"><div class="sf warn" id="pf-gpu" style="width:88%"></div></div><span class="sv warn" id="pv-gpu">88%</span></div>
+                    <div class="sys-stat"><span class="sl">NETWORK I/O</span><div class="sb"><div class="sf" id="pf-net" style="width:31%"></div></div><span class="sv" id="pv-net">31%</span></div>
+                    <div class="status-items">
+                        <div class="si on">● POWER SYSTEMS</div><div class="si on">● AI CORE ACTIVE</div>
+                        <div class="si on">● VISION ARRAY</div><div class="si warn">◐ COOLING SYS</div><div class="si on">● GESTURE ENGINE</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CAMERA -->
+            <div class="holo-panel" id="panel-camera" data-panel="camera">
+                <div class="panel-scanline"></div>
+                <div class="panel-corner tl"></div><div class="panel-corner br"></div>
+                <div class="panel-header"><span class="ph-icon">◉</span><span class="ph-title">VISION ARRAY</span><div class="ph-right"><span class="ph-dot g"></span><span class="ph-close">✕</span></div></div>
+                <div class="panel-content">
+                    <div class="cam-feed-wrap"><canvas id="camera-feed-canvas" width="260" height="146"></canvas></div>
+                    <div class="cam-info">
+                        <div class="ci"><span>RESOLUTION</span><span>640×480</span></div>
+                        <div class="ci"><span>LANDMARKS</span><span id="lm-count-panel">0/21</span></div>
+                        <div class="ci"><span>CONFIDENCE</span><span id="conf-panel">0.00</span></div>
+                        <div class="ci"><span>MODE</span><span class="accent">LIVE TRACK</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS -->
+            <div class="holo-panel" id="panel-analytics" data-panel="analytics">
+                <div class="panel-scanline"></div>
+                <div class="panel-corner tl"></div><div class="panel-corner br"></div>
+                <div class="panel-header"><span class="ph-icon">◈</span><span class="ph-title">ANALYTICS</span><div class="ph-right"><span class="ph-dot g"></span><span class="ph-close">✕</span></div></div>
+                <div class="panel-content">
+                    <canvas id="analytics-canvas" width="280" height="140"></canvas>
+                    <div class="analytics-legend"><span class="leg cyan">■ TRACK QUALITY</span><span class="leg blue">■ GESTURE RATE</span><span class="leg white">■ SYSTEM LOAD</span></div>
+                </div>
+            </div>
+
+            <!-- MAP -->
+            <div class="holo-panel" id="panel-map" data-panel="map">
+                <div class="panel-scanline"></div>
+                <div class="panel-corner tl"></div><div class="panel-corner br"></div>
+                <div class="panel-header"><span class="ph-icon">⊕</span><span class="ph-title">SPATIAL MAP</span><div class="ph-right"><span class="ph-dot g"></span><span class="ph-close">✕</span></div></div>
+                <div class="panel-content"><canvas id="map-canvas" width="280" height="200"></canvas></div>
+            </div>
+
+            <!-- FILES -->
+            <div class="holo-panel" id="panel-files" data-panel="files">
+                <div class="panel-scanline"></div>
+                <div class="panel-corner tl"></div><div class="panel-corner br"></div>
+                <div class="panel-header"><span class="ph-icon">▦</span><span class="ph-title">DATA ARCHIVE</span><div class="ph-right"><span class="ph-dot g"></span><span class="ph-close">✕</span></div></div>
+                <div class="panel-content">
+                    <div class="file-list">
+                        <div class="fi"><span class="fi-i">◈</span><span class="fi-n">mission_data_v7.arc</span><span class="fi-s">2.4 GB</span></div>
+                        <div class="fi"><span class="fi-i">◈</span><span class="fi-n">suit_schematics.hol</span><span class="fi-s">847 MB</span></div>
+                        <div class="fi active"><span class="fi-i">◈</span><span class="fi-n">ai_core_backup.dat</span><span class="fi-s">12.1 GB</span></div>
+                        <div class="fi"><span class="fi-i">◈</span><span class="fi-n">threat_analysis.sec</span><span class="fi-s">336 MB</span></div>
+                        <div class="fi"><span class="fi-i">◈</span><span class="fi-n">energy_config.cfg</span><span class="fi-s">1.2 MB</span></div>
+                        <div class="fi"><span class="fi-i">◈</span><span class="fi-n">nav_algorithms.bin</span><span class="fi-s">654 MB</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NETWORK -->
+            <div class="holo-panel" id="panel-network" data-panel="network">
+                <div class="panel-scanline"></div>
+                <div class="panel-corner tl"></div><div class="panel-corner br"></div>
+                <div class="panel-header"><span class="ph-icon">⬢</span><span class="ph-title">NETWORK MATRIX</span><div class="ph-right"><span class="ph-dot g"></span><span class="ph-close">✕</span></div></div>
+                <div class="panel-content">
+                    <canvas id="network-canvas" width="280" height="120"></canvas>
+                    <div class="net-stats">
+                        <div class="ns"><span>UPLINK</span><span class="accent">↑ 847 Mb/s</span></div>
+                        <div class="ns"><span>DOWNLINK</span><span class="accent">↓ 2.4 Gb/s</span></div>
+                        <div class="ns"><span>LATENCY</span><span>12 ms</span></div>
+                        <div class="ns"><span>ACTIVE NODES</span><span>47</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROL -->
+            <div class="holo-panel" id="panel-control" data-panel="control">
+                <div class="panel-scanline"></div>
+                <div class="panel-corner tl"></div><div class="panel-corner br"></div>
+                <div class="panel-header"><span class="ph-icon">⬡</span><span class="ph-title">CONTROL CENTER</span><div class="ph-right"><span class="ph-dot g"></span><span class="ph-close">✕</span></div></div>
+                <div class="panel-content">
+                    <div class="ctrl-group"><div class="ctrl-lbl">INTERFACE BRIGHTNESS</div><div class="ctrl-slider"><div class="cs-fill" style="width:75%"></div><div class="cs-thumb" style="left:75%"></div></div></div>
+                    <div class="ctrl-group"><div class="ctrl-lbl">TRACKING SENSITIVITY</div><div class="ctrl-slider"><div class="cs-fill" style="width:60%"></div><div class="cs-thumb" style="left:60%"></div></div></div>
+                    <div class="ctrl-group"><div class="ctrl-lbl">HOLOGRAM DENSITY</div><div class="ctrl-slider"><div class="cs-fill" style="width:40%"></div><div class="cs-thumb" style="left:40%"></div></div></div>
+                    <div class="ctrl-buttons">
+                        <button class="ctrl-btn active">SCAN MODE</button>
+                        <button class="ctrl-btn">STEALTH</button>
+                        <button class="ctrl-btn">ANALYZE</button>
+                        <button class="ctrl-btn danger">RESET</button>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end panels-container -->
+
+        <!-- CURSOR -->
+        <div id="holo-cursor">
+            <div class="hc-ring outer"></div>
+            <div class="hc-ring mid"></div>
+            <div class="hc-dot"></div>
+            <div class="hc-ch h"></div>
+            <div class="hc-ch v"></div>
+        </div>
+
+        <!-- GESTURE GUIDE -->
+        <div id="gesture-guide" class="hidden-guide">
+            <div class="gg-title">◈ GESTURE REFERENCE</div>
+            <div class="gg-item"><span>✋</span><span>Open Palm → Activate HUD</span></div>
+            <div class="gg-item"><span>☝</span><span>Index Finger → Cursor</span></div>
+            <div class="gg-item"><span>🤌</span><span>Pinch → Select / Grab</span></div>
+            <div class="gg-item"><span>✌</span><span>Two Fingers → Change Mode</span></div>
+            <div class="gg-item"><span>👊</span><span>Fist → Close Panel</span></div>
+            <div class="gg-item"><span>⟵⟶</span><span>Swipe L/R → Switch Panel</span></div>
+            <div class="gg-item"><span>⟵</span><span>Swipe Up → Open Menu</span></div>
+            <button class="gg-close" id="guide-close">DISMISS</button>
+        </div>
+
+        <!-- NOTIFICATIONS -->
+        <div id="notifications-container"></div>
+
+    </div><!-- ui-overlay -->
+</div><!-- app -->
+
+<!-- CDN SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.134.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
+
+<!-- APP SCRIPTS -->
+<script src="js/handTracking.js"></script>
+<script src="js/gestures.js"></script>
+<script src="js/hologram.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
